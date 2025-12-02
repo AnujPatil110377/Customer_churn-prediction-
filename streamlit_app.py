@@ -134,12 +134,22 @@ if prediction:
         "cltv": cltv
     }
 
-    # Query
-    rep = requests.post("https://churn-detection-8.herokuapp.com/predict", json= data)
-    json_str = json.dumps(rep.json())
-    respon = json.loads(json_str)
-
-    st.subheader(f"{respon[0]}")
+    # Query the prediction API
+    API_URL = "https://churn-detection-8.herokuapp.com/predict"
+    try:
+        rep = requests.post(API_URL, json=data, timeout=30)
+        rep.raise_for_status()  # Raise an error for bad HTTP status codes
+        json_str = json.dumps(rep.json())
+        respon = json.loads(json_str)
+        st.subheader(f"{respon[0]}")
+    except requests.exceptions.Timeout:
+        st.error("⏱️ The prediction API timed out. The server may be waking up — please try again in a few seconds.")
+    except requests.exceptions.ConnectionError:
+        st.error("🔌 Could not connect to the prediction API. The server may be down or unreachable.")
+    except requests.exceptions.HTTPError as e:
+        st.error(f"❌ The prediction API returned an error: {e}")
+    except Exception as e:
+        st.error(f"⚠️ An unexpected error occurred: {e}")
 
 
 
